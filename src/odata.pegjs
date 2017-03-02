@@ -179,7 +179,7 @@ identifierPart              = a:[_a-zA-Z] b:unreserved? { return a + b; }
 identifier                  =
                                 a:identifierPart list:("." i:identifier {return i;})? {
                                     if (list === "") list = [];
-                                    if (require('util').isArray(list[0])) {
+                                    if (Array.isArray(list[0])) {
                                         list = list[0];
                                     }
                                     list.unshift(a);
@@ -206,7 +206,7 @@ expand                      =   "$expand=" list:expandList { return { "$expand":
 
 expandList                  =   i:identifierPath list:("," WSP? l:expandList {return l;})? {
                                     if (list === "") list = [];
-                                    if (require('util').isArray(list[0])) {
+                                    if (Array.isArray(list[0])) {
                                         list = list[0];
                                     }
                                     list.unshift(i);
@@ -237,7 +237,7 @@ orderbyList                 = i:(id:identifier ord:(WSP ("asc"/"desc"))? {
                               list:("," WSP? l:orderbyList{return l;})? {
 
                                     if (list === "") list = [];
-                                    if (require('util').isArray(list[0])) {
+                                    if (Array.isArray(list[0])) {
                                         list = list[0];
                                     }
                                     list.unshift(i);
@@ -249,7 +249,7 @@ select                      =   "$select=" list:selectList { return { "$select":
                             /   "$select=" .* { return {"error": 'invalid $select parameter'}; }
 
 identifierPathParts         =   "/" i:identifierPart list:identifierPathParts? {
-                                    if (require('util').isArray(list[0])) {
+                                    if (Array.isArray(list[0])) {
                                         list = list[0];
                                     }
                                     return "/" + i + list;
@@ -258,7 +258,7 @@ identifierPath              =   a:identifier b:identifierPathParts? { return a +
 selectList                  =
                                 i:(a:identifierPath b:".*"?{return a + b;}/"*") list:("," WSP? l:selectList {return l;})? {
                                     if (list === "") list = [];
-                                    if (require('util').isArray(list[0])) {
+                                    if (Array.isArray(list[0])) {
                                         list = list[0];
                                     }
                                     list.unshift(i);
@@ -281,7 +281,7 @@ filterExpr                  =
                               } / 
                               left:cond right:( WSP type:("and"/"or") WSP value:filterExpr{
                                     return { type: type, value: value}
-                              })? {
+                              }) ? {
                                 return filterExprHelper(left, right);
                               }
 
@@ -339,12 +339,20 @@ otherFunc2                 = f:otherFunctions2Arg "(" arg0:part "," WSP? arg1:pa
                               }
 
 cond                        = a:part WSP op:op WSP b:part {
-                                    return {
-                                        type: op,
-                                        left: a,
-                                        right: b
-                                    };
-                                } / booleanFunc
+                                  return {
+                                      type: op,
+                                      left: a,
+                                      right: b
+                                  };
+                              } / anyFunc / booleanFunc
+
+anyFunc                     = left:(u:identifierPart { return { type: "property", name: u }; }) "/any(f: f eq " right:part ")" {
+                                  return {
+                                      type: "any",
+                                      left: left,
+                                      right: right
+                                  };
+                              } 
 
 part                        =   booleanFunc /
                                 otherFunc2 /
@@ -355,11 +363,11 @@ part                        =   booleanFunc /
                                         value: l
                                     };
                                 } /
-                                (u:identifierPath {
+                                u:identifierPath {
                                     return {
                                         type: 'property', name: u
                                     };
-                                })
+                                }
 
 op                          =
                                 "eq" /

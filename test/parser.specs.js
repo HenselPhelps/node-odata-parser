@@ -380,6 +380,11 @@ describe('odata.parser grammar', function () {
         assert.ok(ast.$filter.right.value instanceof Date);
     });
 
+    it('should parse dates in ISO format', function() {
+        var ast = parser.parse("$filter=hireDate ge 2015-01-01");
+        assert.ok(ast.$filter.right.value instanceof Date);
+    });
+
     it('should parse boolean okay', function(){
         var ast = parser.parse('$filter=status eq true');
         assert.equal(ast.$filter.right.value, true);

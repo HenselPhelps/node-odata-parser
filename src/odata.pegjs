@@ -45,6 +45,7 @@ SQUOTE                      =   "%x27" / "'"
  */
 primitiveLiteral            =   null /
                                 binary /
+                                date /
                                 dateTime /
                                 dateTimeOffset /
                                 guid /
@@ -76,6 +77,8 @@ boolean                     =   "true" { return true; } /
 
 byte                        =   DIGIT DIGIT DIGIT
                                 // numbers in the range from 0 to 257
+                               
+date                        =   y:year "-" m:month "-" d:day { return new Date([y, m, d].join("-")); }
 
 dateTime                    =   "datetime" SQUOTE a:dateTimeBody SQUOTE { return new Date(a); }
 

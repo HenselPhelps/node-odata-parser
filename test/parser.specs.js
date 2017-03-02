@@ -338,6 +338,35 @@ describe('odata.parser grammar', function () {
       });
     });
 
+    it('should parse $filter with any and a filter expression', function() {
+      var ast = parser.parse("$filter=schools/any(f: f eq 'UNC')");
+
+      assert.equal(ast.$filter.type, "any");
+
+      assert.equal(ast.$filter.left.type, "property");
+      assert.equal(ast.$filter.left.name, "schools");
+      assert.equal(ast.$filter.right.type, "literal");
+      assert.equal(ast.$filter.right.value, "UNC");
+    });
+
+    it('should parse $filter with multiple or-ed anys', function() {
+        var ast = parser.parse("$filter=schools/any(f: f eq 'UNC') or schools/any(f: f eq 'UW')")
+
+        assert.equal(ast.$filter.type, "or");
+
+        assert.equal(ast.$filter.left.type, "any");
+        assert.equal(ast.$filter.left.left.type, "property");
+        assert.equal(ast.$filter.left.left.name, "schools");
+        assert.equal(ast.$filter.left.right.type, "literal");
+        assert.equal(ast.$filter.left.right.value, "UNC");
+
+        assert.equal(ast.$filter.right.type, "any");
+        assert.equal(ast.$filter.right.left.type, "property");
+        assert.equal(ast.$filter.right.left.name, "schools");
+        assert.equal(ast.$filter.right.right.type, "literal");
+        assert.equal(ast.$filter.right.right.value, "UW");
+    });
+
     it('should return an error if invalid value', function() {
 
         var ast = parser.parse("$top=foo");
